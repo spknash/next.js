@@ -41,7 +41,7 @@ pub async fn make_chunk_group(
         async_modules,
         traced_modules,
     } = chunk_group_content(
-        &*module_graph.await?,
+        module_graph,
         chunk_group_entries,
         availability_info,
         can_split_async,
@@ -76,9 +76,11 @@ pub async fn make_chunk_group(
         .collect::<FxIndexMap<_, Option<ResolvedVc<AsyncModuleInfo>>>>();
 
     // Compute new [AvailabilityInfo]
-    let availability_info = availability_info
-        .with_modules(Vc::cell(chunkable_modules))
-        .await?;
+    let own_chunk_group_info = module_graph
+        .chunk_group_info()
+        // TODO which module should actually be looked up here?
+        .get(*ResolvedVc::upcast(*chunkable_modules.first().unwrap()));
+    let availability_info = availability_info.with_modules(own_chunk_group_info).await?;
 
     // Insert async chunk loaders for every referenced async module
     let async_loaders = async_modules
@@ -177,7 +179,7 @@ pub async fn references_to_output_assets(
 }
 
 pub async fn chunk_group_content(
-    module_graph: &ModuleGraph,
+    module_graph: Vc<ModuleGraph>,
     chunk_group_entries: impl IntoIterator<Item = ResolvedVc<Box<dyn Module>>>,
     availability_info: AvailabilityInfo,
     can_split_async: bool,
@@ -200,8 +202,11 @@ pub async fn chunk_group_content(
         },
     };
 
-    let available_modules = match availability_info.available_modules() {
-        Some(available_modules) => Some(available_modules.snapshot().await?),
+    let chunk_group_info = module_graph.chunk_group_info().await?;
+    let module_graph = module_graph.await?;
+
+    let available_chunk_groups = match availability_info.available_chunk_groups() {
+        Some(available_chunk_groups) => Some(available_chunk_groups.await?),
         None => None,
     };
 
@@ -228,9 +233,13 @@ pub async fn chunk_group_content(
                     return Ok(GraphTraversalAction::Skip);
                 };
 
-                let is_available = available_modules
-                    .as_ref()
-                    .is_some_and(|available_modules| available_modules.get(chunkable_module));
+                let is_available = if let Some(available_modules) = &available_chunk_groups {
+                    available_modules.is_available_individual(
+                        chunk_group_info.get_individual(ResolvedVc::upcast(chunkable_module))?,
+                    )
+                } else {
+                    false
+                };
 
                 let Some((_, edge)) = parent_info else {
                     return Ok(if is_available {

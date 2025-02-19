@@ -1,7 +1,10 @@
 use anyhow::Result;
 use turbo_tasks::{ResolvedVc, Vc};
 
-use super::available_modules::{AvailableModuleInfoMap, AvailableModules};
+use crate::{
+    chunk::available_chunk_groups::AvailableChunkGroups,
+    module_graph::chunk_group_info::RoaringBitmapWrapperCell,
+};
 
 #[turbo_tasks::value(serialization = "auto_for_input")]
 #[derive(Hash, Clone, Copy, Debug)]
@@ -12,12 +15,12 @@ pub enum AvailabilityInfo {
     Root,
     /// There are modules already available.
     Complete {
-        available_modules: ResolvedVc<AvailableModules>,
+        available_modules: ResolvedVc<AvailableChunkGroups>,
     },
 }
 
 impl AvailabilityInfo {
-    pub fn available_modules(&self) -> Option<ResolvedVc<AvailableModules>> {
+    pub fn available_chunk_groups(&self) -> Option<ResolvedVc<AvailableChunkGroups>> {
         match self {
             Self::Untracked => None,
             Self::Root => None,
@@ -27,15 +30,15 @@ impl AvailabilityInfo {
         }
     }
 
-    pub async fn with_modules(self, modules: Vc<AvailableModuleInfoMap>) -> Result<Self> {
+    pub async fn with_modules(self, chunk_group: Vc<RoaringBitmapWrapperCell>) -> Result<Self> {
         Ok(match self {
             AvailabilityInfo::Untracked => AvailabilityInfo::Untracked,
             AvailabilityInfo::Root => AvailabilityInfo::Complete {
-                available_modules: AvailableModules::new(modules).to_resolved().await?,
+                available_modules: AvailableChunkGroups::new(chunk_group).to_resolved().await?,
             },
             AvailabilityInfo::Complete { available_modules } => AvailabilityInfo::Complete {
                 available_modules: available_modules
-                    .with_modules(modules)
+                    .with_chunk_group(chunk_group)
                     .to_resolved()
                     .await?,
             },
