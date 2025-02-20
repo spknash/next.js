@@ -425,13 +425,12 @@ impl ChunkingContext for BrowserChunkingContext {
         let span = tracing::info_span!("chunking", ident = ident.to_string().await?.to_string());
         async move {
             let this = self.await?;
-            let modules = chunk_group.entries();
             let input_availability_info = availability_info.into_value();
             let MakeChunkGroupResult {
                 chunks,
                 availability_info,
             } = make_chunk_group(
-                modules,
+                chunk_group,
                 module_graph,
                 ResolvedVc::upcast(self),
                 input_availability_info,
@@ -495,13 +494,21 @@ impl ChunkingContext for BrowserChunkingContext {
             let this = self.await?;
             let availability_info = availability_info.into_value();
 
-            let entries = chunk_group.entries();
+            let evaluatable_entries = Vc::cell(
+                chunk_group
+                    .entries()
+                    .map(|m| {
+                        ResolvedVc::try_downcast::<Box<dyn EvaluatableAsset>>(m)
+                            .context("evaluated_chunk_group entries must be evaluatable assets")
+                    })
+                    .collect::<Result<Vec<_>>>()?,
+            );
 
             let MakeChunkGroupResult {
                 chunks,
                 availability_info,
             } = make_chunk_group(
-                entries,
+                chunk_group,
                 module_graph,
                 ResolvedVc::upcast(self),
                 availability_info,
@@ -516,21 +523,11 @@ impl ChunkingContext for BrowserChunkingContext {
 
             let other_assets = Vc::cell(assets.clone());
 
-            let entries = Vc::cell(
-                chunk_group
-                    .entries()
-                    .map(|m| {
-                        ResolvedVc::try_downcast::<Box<dyn EvaluatableAsset>>(m)
-                            .context("evaluated_chunk_group entries must be evaluatable assets")
-                    })
-                    .collect::<Result<Vec<_>>>()?,
-            );
-
             if this.enable_hot_module_replacement {
                 assets.push(
                     self.generate_chunk_list_register_chunk(
                         ident,
-                        entries,
+                        evaluatable_entries,
                         other_assets,
                         Value::new(EcmascriptDevChunkListSource::Entry),
                     )
@@ -540,9 +537,14 @@ impl ChunkingContext for BrowserChunkingContext {
             }
 
             assets.push(
-                self.generate_evaluate_chunk(ident, other_assets, entries, module_graph)
-                    .to_resolved()
-                    .await?,
+                self.generate_evaluate_chunk(
+                    ident,
+                    other_assets,
+                    evaluatable_entries,
+                    module_graph,
+                )
+                .to_resolved()
+                .await?,
             );
 
             Ok(ChunkGroupResult {

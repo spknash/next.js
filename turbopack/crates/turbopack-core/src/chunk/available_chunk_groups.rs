@@ -1,6 +1,7 @@
 use std::hash::{Hash, Hasher};
 
 use anyhow::Result;
+use roaring::RoaringBitmap;
 use rustc_hash::FxHasher;
 use turbo_tasks::Vc;
 
@@ -15,22 +16,20 @@ pub struct AvailableChunkGroups {
 #[turbo_tasks::value_impl]
 impl AvailableChunkGroups {
     #[turbo_tasks::function]
-    pub async fn new(chunk_groups: Vc<RoaringBitmapWrapperCell>) -> Result<Vc<Self>> {
+    pub async fn new(chunk_group: u32) -> Result<Vc<Self>> {
         Ok(AvailableChunkGroups {
-            chunk_groups: chunk_groups.owned().await?,
+            chunk_groups: RoaringBitmapWrapper::new(
+                RoaringBitmap::from_sorted_iter(std::iter::once(chunk_group)).unwrap(),
+            ),
         }
         .cell())
     }
 
     #[turbo_tasks::function]
-    pub async fn with_chunk_group(
-        &self,
-        chunk_group: Vc<RoaringBitmapWrapperCell>,
-    ) -> Result<Vc<Self>> {
-        Ok(AvailableChunkGroups {
-            chunk_groups: RoaringBitmapWrapper::new(&*self.chunk_groups | &**chunk_group.await?),
-        }
-        .cell())
+    pub async fn with_chunk_group(&self, chunk_group: u32) -> Result<Vc<Self>> {
+        let mut chunk_groups = self.chunk_groups.clone();
+        chunk_groups.insert(chunk_group);
+        Ok(AvailableChunkGroups { chunk_groups }.cell())
     }
 
     #[turbo_tasks::function]

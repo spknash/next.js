@@ -1,10 +1,7 @@
 use anyhow::Result;
-use turbo_tasks::{ResolvedVc, Vc};
+use turbo_tasks::ResolvedVc;
 
-use crate::{
-    chunk::available_chunk_groups::AvailableChunkGroups,
-    module_graph::chunk_group_info::RoaringBitmapWrapperCell,
-};
+use crate::chunk::available_chunk_groups::AvailableChunkGroups;
 
 #[turbo_tasks::value(serialization = "auto_for_input")]
 #[derive(Hash, Clone, Copy, Debug)]
@@ -30,7 +27,7 @@ impl AvailabilityInfo {
         }
     }
 
-    pub async fn with_modules(self, chunk_group: Vc<RoaringBitmapWrapperCell>) -> Result<Self> {
+    pub async fn with_modules(self, chunk_group: u32) -> Result<Self> {
         Ok(match self {
             AvailabilityInfo::Untracked => AvailabilityInfo::Untracked,
             AvailabilityInfo::Root => AvailabilityInfo::Complete {

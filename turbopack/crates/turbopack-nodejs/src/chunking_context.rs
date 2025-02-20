@@ -346,12 +346,11 @@ impl ChunkingContext for NodeJsChunkingContext {
     ) -> Result<Vc<ChunkGroupResult>> {
         let span = tracing::info_span!("chunking", module = ident.to_string().await?.to_string());
         async move {
-            let modules = chunk_group.entries();
             let MakeChunkGroupResult {
                 chunks,
                 availability_info,
             } = make_chunk_group(
-                modules,
+                chunk_group,
                 module_graph,
                 ResolvedVc::upcast(self),
                 availability_info.into_value(),
@@ -394,7 +393,7 @@ impl ChunkingContext for NodeJsChunkingContext {
             chunks,
             availability_info,
         } = make_chunk_group(
-            entries,
+            ChunkGroup::Entry(entries.collect()),
             module_graph,
             ResolvedVc::upcast(self),
             availability_info,

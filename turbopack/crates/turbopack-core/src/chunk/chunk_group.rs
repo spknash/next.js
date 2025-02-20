@@ -12,7 +12,7 @@ use crate::{
     chunk::ChunkingType,
     environment::ChunkLoading,
     module::Module,
-    module_graph::{GraphTraversalAction, ModuleGraph},
+    module_graph::{chunk_group_info::ChunkGroup, GraphTraversalAction, ModuleGraph},
     output::OutputAssets,
     reference::ModuleReference,
     traced_asset::TracedAsset,
@@ -25,7 +25,7 @@ pub struct MakeChunkGroupResult {
 
 /// Creates a chunk group from a set of entries.
 pub async fn make_chunk_group(
-    chunk_group_entries: impl IntoIterator<Item = ResolvedVc<Box<dyn Module>>>,
+    chunk_group: ChunkGroup,
     module_graph: Vc<ModuleGraph>,
     chunking_context: ResolvedVc<Box<dyn ChunkingContext>>,
     availability_info: AvailabilityInfo,
@@ -42,7 +42,7 @@ pub async fn make_chunk_group(
         traced_modules,
     } = chunk_group_content(
         module_graph,
-        chunk_group_entries,
+        chunk_group.entries(),
         availability_info,
         can_split_async,
         should_trace,
@@ -76,11 +76,13 @@ pub async fn make_chunk_group(
         .collect::<FxIndexMap<_, Option<ResolvedVc<AsyncModuleInfo>>>>();
 
     // Compute new [AvailabilityInfo]
-    let own_chunk_group_info = module_graph
+    let current_chunk_group_idx = *module_graph
         .chunk_group_info()
-        // TODO which module should actually be looked up here?
-        .get(*ResolvedVc::upcast(*chunkable_modules.first().unwrap()));
-    let availability_info = availability_info.with_modules(own_chunk_group_info).await?;
+        .get_index_of(chunk_group)
+        .await?;
+    let availability_info = availability_info
+        .with_modules(current_chunk_group_idx)
+        .await?;
 
     // Insert async chunk loaders for every referenced async module
     let async_loaders = async_modules
