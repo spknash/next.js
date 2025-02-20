@@ -169,7 +169,11 @@ impl ChunkItem for AsyncLoaderChunkItem {
             .available_chunk_groups()
         {
             ident = ident.with_modifier(Vc::cell(
-                available_chunk_items.hash().await?.to_string().into(),
+                available_chunk_items
+                    .hash(self.module_graph.chunk_group_info())
+                    .await?
+                    .to_string()
+                    .into(),
             ));
         }
         Ok(ident)

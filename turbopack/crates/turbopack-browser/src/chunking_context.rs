@@ -452,7 +452,11 @@ impl ChunkingContext for BrowserChunkingContext {
                     }
                     AvailabilityInfo::Complete { available_modules } => {
                         ident = ident.with_modifier(Vc::cell(
-                            available_modules.hash().await?.to_string().into(),
+                            available_modules
+                                .hash(module_graph.chunk_group_info())
+                                .await?
+                                .to_string()
+                                .into(),
                         ));
                     }
                 }

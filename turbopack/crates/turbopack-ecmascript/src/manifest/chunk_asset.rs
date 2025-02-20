@@ -99,8 +99,13 @@ impl ManifestAsyncModule {
     pub async fn content_ident(&self) -> Result<Vc<AssetIdent>> {
         let mut ident = self.inner.ident();
         if let Some(available_modules) = self.availability_info.available_chunk_groups() {
-            ident =
-                ident.with_modifier(Vc::cell(available_modules.hash().await?.to_string().into()));
+            ident = ident.with_modifier(Vc::cell(
+                available_modules
+                    .hash(self.module_graph.chunk_group_info())
+                    .await?
+                    .to_string()
+                    .into(),
+            ));
         }
         Ok(ident)
     }

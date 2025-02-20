@@ -1,11 +1,10 @@
-use std::hash::{Hash, Hasher};
-
 use anyhow::Result;
 use roaring::RoaringBitmap;
-use rustc_hash::FxHasher;
 use turbo_tasks::Vc;
 
-use crate::module_graph::chunk_group_info::{RoaringBitmapWrapper, RoaringBitmapWrapperCell};
+use crate::module_graph::chunk_group_info::{
+    ChunkGroupInfo, RoaringBitmapWrapper, RoaringBitmapWrapperCell,
+};
 
 /// Allows to gather information about which assets are already available.
 #[turbo_tasks::value]
@@ -33,11 +32,12 @@ impl AvailableChunkGroups {
     }
 
     #[turbo_tasks::function]
-    pub async fn hash(&self) -> Result<Vc<u64>> {
-        let mut hasher = FxHasher::default();
-        self.chunk_groups.hash(&mut hasher);
-        // TODO a more deterministic hash? Previously, this hashed all `module.ident().to_string()`
-        Ok(Vc::cell(hasher.finish()))
+    pub async fn hash(&self, chunk_group_info: Vc<ChunkGroupInfo>) -> Result<Vc<u64>> {
+        Ok(Vc::cell(
+            chunk_group_info
+                .await?
+                .hash_chunk_groups(&self.chunk_groups),
+        ))
     }
 
     #[turbo_tasks::function]

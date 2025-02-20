@@ -1,6 +1,6 @@
 use std::{
     collections::BinaryHeap,
-    hash::Hash,
+    hash::{Hash, Hasher},
     ops::{Deref, DerefMut},
 };
 
@@ -8,7 +8,7 @@ use anyhow::{bail, Result};
 use either::Either;
 use indexmap::map::Entry;
 use roaring::RoaringBitmap;
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::{FxHashMap, FxHashSet, FxHasher};
 use serde::{Deserialize, Serialize};
 use tracing::Instrument;
 use turbo_rcstr::RcStr;
@@ -113,6 +113,16 @@ impl ChunkGroupInfo {
     }
 }
 
+impl ChunkGroupInfo {
+    pub fn hash_chunk_groups(&self, chunk_groups: &RoaringBitmapWrapper) -> u64 {
+        let mut result = FxHasher::default();
+        for idx in chunk_groups.iter() {
+            self.chunk_groups[idx as usize].hash_chunk_groups(&mut result, self);
+        }
+        result.finish()
+    }
+}
+
 #[derive(
     Debug, Clone, Hash, TaskInput, PartialEq, Eq, Serialize, Deserialize, TraceRawVcs, NonLocalValue,
 )]
@@ -184,6 +194,35 @@ impl ChunkGroup {
             ChunkGroup::Entry(entries)
             | ChunkGroup::IsolatedMerged { entries, .. }
             | ChunkGroup::SharedMerged { entries, .. } => Either::Right(entries.iter().copied()),
+        }
+    }
+
+    pub fn hash_chunk_groups(&self, hasher: &mut impl Hasher, chunk_group_info: &ChunkGroupInfo) {
+        match self {
+            g @ ChunkGroup::Entry { .. } => g.hash(hasher),
+            g @ ChunkGroup::Async(_) => g.hash(hasher),
+            g @ ChunkGroup::Isolated(_) => g.hash(hasher),
+            g @ ChunkGroup::Shared(_) => g.hash(hasher),
+            ChunkGroup::IsolatedMerged {
+                parent,
+                merge_tag,
+                entries,
+            } => {
+                core::mem::discriminant(self).hash(hasher);
+                chunk_group_info.chunk_groups[*parent].hash_chunk_groups(hasher, chunk_group_info);
+                merge_tag.hash(hasher);
+                entries.hash(hasher);
+            }
+            ChunkGroup::SharedMerged {
+                parent,
+                merge_tag,
+                entries,
+            } => {
+                core::mem::discriminant(self).hash(hasher);
+                chunk_group_info.chunk_groups[*parent].hash_chunk_groups(hasher, chunk_group_info);
+                merge_tag.hash(hasher);
+                entries.hash(hasher);
+            }
         }
     }
 
