@@ -1693,7 +1693,7 @@ impl AppEndpoint {
                 let entry_chunk_group_idx = *module_graph
                     .chunk_group_info()
                     .get_index_of(ChunkGroup::Entry {
-                        entries: vec![ResolvedVc::upcast(rsc_entry)],
+                        entries: [ResolvedVc::upcast(rsc_entry)].into_iter().collect(),
                         ty: ChunkGroupType::Entry,
                     })
                     .await?;
@@ -1711,7 +1711,9 @@ impl AppEndpoint {
                                 .iter()
                                 .map(async |m| Ok(ResolvedVc::upcast(m.await?.module)))
                                 .try_join()
-                                .await?;
+                                .await?
+                                .into_iter()
+                                .collect();
                             let chunk_group = chunking_context
                                 .chunk_group(
                                     AssetIdent::from_path(
