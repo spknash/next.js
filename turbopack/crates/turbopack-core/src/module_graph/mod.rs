@@ -139,7 +139,7 @@ impl VisitedModules {
     }
 }
 
-pub type GraphEntriesT = Vec<(Vec<ResolvedVc<Box<dyn Module>>>, ChunkGroupType)>;
+pub type GraphEntriesT = Vec<(Vec<ResolvedVc<Box<dyn Module>>>, Option<ChunkGroupType>)>;
 
 #[turbo_tasks::value(transparent)]
 pub struct GraphEntries(GraphEntriesT);
@@ -704,7 +704,10 @@ impl ModuleGraph {
     }
 
     #[turbo_tasks::function]
-    pub fn from_module(module: ResolvedVc<Box<dyn Module>>, ty: ChunkGroupType) -> Vc<Self> {
+    pub fn from_module(
+        module: ResolvedVc<Box<dyn Module>>,
+        ty: Option<ChunkGroupType>,
+    ) -> Vc<Self> {
         Self::from_single_graph(SingleModuleGraph::new_with_entries(Vc::cell(vec![(
             vec![module],
             ty,
