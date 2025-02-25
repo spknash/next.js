@@ -225,6 +225,22 @@ impl ClientReferenceManifest {
                         client_component_ssr_chunks.get(&app_client_reference_ty)
                     {
                         let ssr_chunks = ssr_chunks.await?;
+                        // println!(
+                        //     "output ssr_chunks: {:?} {:#?}",
+                        //     match app_client_reference_ty {
+                        //         ClientReferenceType::EcmascriptClientReference(x) => {
+                        //             x.ident().to_string().await?
+                        //         }
+                        //         ClientReferenceType::CssClientReference(x) => {
+                        //             x.ident().to_string().await?
+                        //         }
+                        //     },
+                        //     ssr_chunks
+                        //         .iter()
+                        //         .map(|m| m.path().to_string())
+                        //         .try_join()
+                        //         .await?,
+                        // );
                         references.extend(ssr_chunks.iter());
 
                         let ssr_chunks_paths = cached_chunk_paths(
@@ -335,12 +351,7 @@ impl ClientReferenceManifest {
             }
 
             // The server utility chunks are merged into the first layout segment
-            let mut server_utility_chunks =
-                if let Some(server_utility_chunks) = layout_segment_client_chunks.get(&None) {
-                    Some(server_utility_chunks.await?)
-                } else {
-                    None
-                };
+            let mut server_utility_chunks = layout_segment_client_chunks.get(&None);
             // per layout segment chunks need to be emitted into the manifest too
             for (server_component, client_chunks) in layout_segment_client_chunks.iter() {
                 let Some(server_component) = server_component else {
@@ -359,7 +370,6 @@ impl ClientReferenceManifest {
                     .entry(server_component_name.clone())
                     .or_default();
 
-                let client_chunks = client_chunks.await?;
                 let client_chunks = client_chunks
                     .iter()
                     .copied()

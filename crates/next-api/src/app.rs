@@ -1216,7 +1216,7 @@ impl AppEndpoint {
             .layout_segment_client_chunks
             .values()
         {
-            entry_client_chunks.extend(chunks.await?.iter().copied());
+            entry_client_chunks.extend(chunks.iter().copied());
         }
         for (chunks, _) in client_references_chunks_ref
             .client_component_client_chunks
@@ -1710,8 +1710,9 @@ impl AppEndpoint {
                                     ),
                                     NEXT_SERVER_UTILITY_MERGE_TAG.clone(),
                                 )
-                                .owned()
                                 .await?
+                                .first()
+                                .cloned()
                                 .unwrap();
 
                             let chunk_group = chunking_context

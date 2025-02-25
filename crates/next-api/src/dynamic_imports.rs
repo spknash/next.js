@@ -64,6 +64,29 @@ pub(crate) async fn collect_next_dynamic_chunks(
             // containing the next/dynamic imports
             let availability_info = match chunking_availability {
                 NextDynamicChunkAvailability::ClientReferences(client_reference_chunks) => {
+                    // println!(
+                    //     "dynamic {:?} {:?}",
+                    //     match &parent_client_reference.unwrap() {
+                    //         ClientReferenceType::EcmascriptClientReference(v) =>
+                    //             v.ident().to_string().await?,
+                    //         ClientReferenceType::CssClientReference(v) =>
+                    //             v.ident().to_string().await?,
+                    //     },
+                    //     match client_reference_chunks
+                    //         .client_component_client_chunks
+                    //         .get(&parent_client_reference.unwrap())
+                    //     {
+                    //         Some(v) => Some(
+                    //             v.0.await?
+                    //                 .iter()
+                    //                 .map(|m| m.path().to_string())
+                    //                 .try_join()
+                    //                 .await?
+                    //         ),
+                    //         None => None,
+                    //     }
+                    // );
+
                     client_reference_chunks
                         .client_component_client_chunks
                         .get(&parent_client_reference.unwrap())
