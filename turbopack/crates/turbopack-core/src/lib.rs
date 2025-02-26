@@ -5,6 +5,7 @@
 #![feature(arbitrary_self_types_pointers)]
 #![feature(impl_trait_in_assoc_type)]
 #![feature(iter_intersperse)]
+#![feature(async_fn_traits)]
 
 pub mod asset;
 pub mod changed;
