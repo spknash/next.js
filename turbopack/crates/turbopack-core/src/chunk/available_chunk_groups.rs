@@ -36,7 +36,8 @@ impl AvailableChunkGroups {
         Ok(Vc::cell(
             chunk_group_info
                 .await?
-                .hash_chunk_groups(&self.chunk_groups),
+                .hash_chunk_groups(&self.chunk_groups)
+                .await?,
         ))
     }
 
