@@ -1,4 +1,4 @@
-(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push(["output/4e721_crates_turbopack-tests_tests_snapshot_imports_dynamic_input_vercel_mjs_0bb63a91._.js", {
+(globalThis.TURBOPACK = globalThis.TURBOPACK || []).push(["output/4e721_crates_turbopack-tests_tests_snapshot_imports_dynamic_input_vercel_mjs_6e4fa3d7._.js", {
 
 "[project]/turbopack/crates/turbopack-tests/tests/snapshot/imports/dynamic/input/vercel.mjs [test] (ecmascript, async loader)": ((__turbopack_context__) => {
 
