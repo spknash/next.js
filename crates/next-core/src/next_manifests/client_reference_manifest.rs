@@ -225,22 +225,6 @@ impl ClientReferenceManifest {
                         client_component_ssr_chunks.get(&app_client_reference_ty)
                     {
                         let ssr_chunks = ssr_chunks.await?;
-                        // println!(
-                        //     "output ssr_chunks: {:?} {:#?}",
-                        //     match app_client_reference_ty {
-                        //         ClientReferenceType::EcmascriptClientReference(x) => {
-                        //             x.ident().to_string().await?
-                        //         }
-                        //         ClientReferenceType::CssClientReference(x) => {
-                        //             x.ident().to_string().await?
-                        //         }
-                        //     },
-                        //     ssr_chunks
-                        //         .iter()
-                        //         .map(|m| m.path().to_string())
-                        //         .try_join()
-                        //         .await?,
-                        // );
                         references.extend(ssr_chunks.iter());
 
                         let ssr_chunks_paths = cached_chunk_paths(

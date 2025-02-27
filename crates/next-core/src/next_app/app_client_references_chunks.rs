@@ -186,48 +186,6 @@ pub async fn get_app_client_references_chunks(
             let mut client_component_ssr_chunks = FxIndexMap::default();
             let mut client_component_client_chunks = FxIndexMap::default();
 
-            // let c = chunk_group_info.await?;
-            // println!(
-            //     "chunk_groups {} {:#?}",
-            //     entry_chunk_group.debug_str(&c).await?,
-            //     c.chunk_groups
-            //         .iter()
-            //         .map(|g| g.debug_str(&c))
-            //         .try_join()
-            //         .await?
-            // );
-            // println!(
-            //     "merged_chunk_groups {:#?}",
-            //     c.merged_chunk_groups
-            //         .iter()
-            //         .map(async |((id, tag), groups)| Ok((
-            //             c.chunk_groups[id.0 as usize].debug_str(&c).await?,
-            //             tag,
-            //             groups
-            //                 .iter()
-            //                 .map(|g| c.chunk_groups[g.0 as usize].debug_str(&c))
-            //                 .try_join()
-            //                 .await?
-            //         )))
-            //         .try_join()
-            //         .await?
-            // );
-            // println!(
-            //     "chunk_group_children {:#?}",
-            //     c.chunk_group_children
-            //         .iter()
-            //         .map(async |(parent, groups)| Ok((
-            //             c.chunk_groups[parent.0 as usize].debug_str(&c).await?,
-            //             groups
-            //                 .iter()
-            //                 .map(|g| c.chunk_groups[g.0 as usize].debug_str(&c))
-            //                 .try_join()
-            //                 .await?
-            //         )))
-            //         .try_join()
-            //         .await?
-            // );
-
             let server_utils_chunk_group = chunk_group_info
                 .get_merged_group(
                     entry_chunk_group.clone(),
@@ -312,27 +270,6 @@ pub async fn get_app_client_references_chunks(
                         )
                     };
 
-                // println!(
-                //     "ssr_chunk_group: {:?} {:?}",
-                //     ssr_chunk_groups
-                //         .iter()
-                //         .map(|g| g.debug_str(&c))
-                //         .try_join()
-                //         .await?,
-                //     match x {
-                //         Some(x) => Some(
-                //             x.await?
-                //                 .assets
-                //                 .await?
-                //                 .iter()
-                //                 .map(|m| m.path().to_string())
-                //                 .try_join()
-                //                 .await?
-                //         ),
-                //         None => None,
-                //     }
-                // );
-
                 let ssr_chunk_group = async {
                     if let Some(ssr_chunking_context) = ssr_chunking_context {
                         ssr_chunk_groups
@@ -406,41 +343,6 @@ pub async fn get_app_client_references_chunks(
                         current_ssr_chunks = ssr_chunks;
                     }
 
-                    // println!(
-                    //     "chunks {:#?} {:#?} {:#?}",
-                    //     entries
-                    //         .iter()
-                    //         .map(async |entry| {
-                    //             Ok((entry, entry.ident(), entry.ident().to_string().await?))
-                    //         })
-                    //         .try_join()
-                    //         .await?,
-                    //     entries
-                    //         .iter()
-                    //         .map(async |entry| {
-                    //             Ok((
-                    //                 entry.ident().to_string().await?,
-                    //                 match client_to_ref_ty.get(entry) {
-                    //                     Some(ClientReferenceType::EcmascriptClientReference(x))
-                    // => {
-                    // Some(x.ident().to_string().await?)                     }
-                    //                     Some(ClientReferenceType::CssClientReference(x)) => {
-                    //                         Some(x.ident().to_string().await?)
-                    //                     }
-                    //                     None => None,
-                    //                 },
-                    //             ))
-                    //         })
-                    //         .try_join()
-                    //         .await?,
-                    //     chunks_group_result
-                    //         .assets
-                    //         .await?
-                    //         .iter()
-                    //         .map(|m| m.path().to_string())
-                    //         .try_join()
-                    //         .await?
-                    // );
                     for entry in &*entries {
                         for client_reference_ty in client_to_ref_ty.get(entry).into_iter().flatten()
                         {
@@ -495,57 +397,6 @@ pub async fn get_app_client_references_chunks(
                     }
                 }
             }
-
-            // println!(
-            //     "client_component_ssr_chunks {:#?}",
-            //     client_component_ssr_chunks
-            //         .iter()
-            //         .map(async |(ty, (output, _))| {
-            //             Ok((
-            //                 match ty {
-            //                     ClientReferenceType::EcmascriptClientReference(x) => {
-            //                         x.ident().to_string().await?
-            //                     }
-            //                     ClientReferenceType::CssClientReference(x) => {
-            //                         x.ident().to_string().await?
-            //                     }
-            //                 },
-            //                 output
-            //                     .await?
-            //                     .iter()
-            //                     .map(|m| m.path().to_string())
-            //                     .try_join()
-            //                     .await?,
-            //             ))
-            //         })
-            //         .try_join()
-            //         .await?
-            // );
-            // println!(
-            //     "client_component_client_chunks {:#?}",
-            //     client_component_client_chunks
-            //         .iter()
-            //         .map(async |(ty, (output, _))| {
-            //             Ok((
-            //                 match ty {
-            //                     ClientReferenceType::EcmascriptClientReference(x) => {
-            //                         x.ident().to_string().await?
-            //                     }
-            //                     ClientReferenceType::CssClientReference(x) => {
-            //                         x.ident().to_string().await?
-            //                     }
-            //                 },
-            //                 output
-            //                     .await?
-            //                     .iter()
-            //                     .map(|m| m.path().to_string())
-            //                     .try_join()
-            //                     .await?,
-            //             ))
-            //         })
-            //         .try_join()
-            //         .await?
-            // );
 
             Ok(ClientReferencesChunks {
                 client_component_client_chunks,
