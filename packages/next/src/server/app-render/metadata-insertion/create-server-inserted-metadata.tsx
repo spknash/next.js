@@ -32,10 +32,16 @@ export function createServerInsertedMetadata() {
       }
 
       metadataToFlush = metadataResolver()
+
       const html = await renderToString({
         renderToReadableStream,
         element: <>{metadataToFlush}</>,
       })
+
+      console.log(
+        'DEBUG:createServerInsertedMetadata:getServerInsertedMetadata',
+        html
+      )
 
       return html
     },

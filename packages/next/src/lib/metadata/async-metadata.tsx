@@ -16,8 +16,12 @@ function ServerInsertMetadata({
 }) {
   // Apply use() to the metadata promise to suspend the rendering in SSR.
   const { metadata } = use(promise)
+  console.log('DEBUG:ServerInsertMetadata')
   // Insert metadata into the HTML stream through the `useServerInsertedMetadata`
-  useServerInsertedMetadata(() => metadata)
+  useServerInsertedMetadata(() => {
+    console.log('DEBUG:ServerInsertMetadata:useServerInsertedMetadata')
+    return metadata
+  })
 
   return null
 }

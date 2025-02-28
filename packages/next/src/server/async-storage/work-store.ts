@@ -98,7 +98,7 @@ export function createWorkStore({
    * coalescing, and ISR continue working as intended.
    */
   const isStaticGeneration =
-    !renderOpts.shouldWaitOnAllReady &&
+    // !renderOpts.shouldWaitOnAllReady &&
     !renderOpts.supportsDynamicResponse &&
     !renderOpts.isDraftMode &&
     !renderOpts.isServerAction

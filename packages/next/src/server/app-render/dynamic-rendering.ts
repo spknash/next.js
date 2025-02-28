@@ -376,6 +376,11 @@ export function postponeWithTracking(
     })
   }
 
+  console.trace(
+    'DEBUG: Postponing due to dynamic access:',
+    expression,
+    dynamicTracking?.dynamicAccesses
+  )
   React.unstable_postpone(createPostponeReason(route, expression))
 }
 
